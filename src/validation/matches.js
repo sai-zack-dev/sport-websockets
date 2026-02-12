@@ -22,22 +22,14 @@ export const matchIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-// Helper: ISO date string validator
-const isoDateString = z
-  .string()
-  .refine((s) => {
-    const parsed = Date.parse(s);
-    return !Number.isNaN(parsed);
-  }, { message: 'Invalid ISO date string' });
-
 // Create match schema
 export const createMatchSchema = z
   .object({
     sport: z.string().min(1, { message: 'sport is required' }),
     homeTeam: z.string().min(1, { message: 'homeTeam is required' }),
     awayTeam: z.string().min(1, { message: 'awayTeam is required' }),
-    startTime: isoDateString,
-    endTime: isoDateString,
+    startTime: z.iso.datetime(),
+    endTime: z.iso.datetime(),
     homeScore: z.coerce.number().int().min(0).optional(),
     awayScore: z.coerce.number().int().min(0).optional(),
   })

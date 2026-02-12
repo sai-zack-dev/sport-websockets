@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { createMatchSchema, listMatchesQuerySchema } from "../validation/matches.js";
+import {
+  createMatchSchema,
+  listMatchesQuerySchema,
+} from "../validation/matches.js";
 import { matches } from "../db/schema.js";
 import { db } from "../db/db.js";
 import { getMatchStatus } from "../utils/match-status.js";
@@ -14,7 +17,7 @@ matchRouter.get("/", async (req, res) => {
   if (!parsed.success) {
     return res
       .status(400)
-      .json({ error: "Invalid query.", details: JSON.stringify(parsed.error) });
+      .json({ error: "Invalid query.", details: parsed.error.issues });
   }
 
   const limit = Math.min(parsed.data.limit ?? 10, MAX_LIMIT);
@@ -27,26 +30,26 @@ matchRouter.get("/", async (req, res) => {
       .limit(limit);
 
     res.json({ data });
-
   } catch (error) {
+    console.error("Failed to list matches:", error);
     res.status(500).json({
       error: "Failed to list matches.",
-      details: JSON.stringify(error),
+      // details: JSON.stringify(error),
     });
   }
 });
 
 matchRouter.post("/", async (req, res) => {
   const parsed = createMatchSchema.safeParse(req.body);
-  const {
-    data: { startTime, endTime, homeScore, awayScore },
-  } = parsed;
+
   if (!parsed.success) {
     return res.status(400).json({
       error: "Invalid payload.",
-      details: JSON.stringify(parsed.error),
+      details: parsed.error.issues,
     });
   }
+
+  const { startTime, endTime, homeScore, awayScore } = parsed.data;
 
   try {
     const [event] = await db
